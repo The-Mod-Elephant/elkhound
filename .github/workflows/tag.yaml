@@ -4,8 +4,8 @@ on:
     tags:
       - "*"
 jobs:
-  release:
-    name: release
+  build:
+    name: build
     runs-on: ubuntu-latest
     container: docker.io/ocaml/opam:debian-ocaml-4.08
     steps:
@@ -23,9 +23,23 @@ jobs:
         env:
           ELKHOUND_BUILD_DIR: "build"
           ELKHOUND_SRC_DIR: "src"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-elkhound
+          path: /home/opam/elkhound/build/elkhound/elkhound
+  release:
+    name: release
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-elkhound
+          path: elkhound
       - name: Create Release
         id: create_release
         uses: ncipollo/release-action@v1.18.0
         with:
           generateReleaseNotes: true
-          artifacts: "/home/opam/elkhound/build/elkhound/elkhound"
+          artifacts: "elkhound"
