@@ -6,6 +6,8 @@ on:
 jobs:
   build:
     name: build
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     container: docker.io/ocaml/opam:debian-ocaml-4.08
     steps:
@@ -29,6 +31,8 @@ jobs:
           path: /home/opam/elkhound/build/elkhound/elkhound
   release:
     name: release
+    permissions:
+      contents: write
     needs: [build]
     runs-on: ubuntu-latest
     steps:
