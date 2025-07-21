@@ -24,3 +24,17 @@ jobs:
         env:
           ELKHOUND_BUILD_DIR: "build"
           ELKHOUND_SRC_DIR: "src"
+  windows-build:
+    name: windows build
+    runs-on: windows-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+      - name: build elkhound
+        run: |
+          choco install winflexbison
+          mkdir build
+          dir
+          cmake -Wno-dev -S D:\a\elkhound\elkhound\src -DCMAKE_BUILD_TYPE=Release -DFLEX_INCLUDE_DIR=D:\a\elkhound\elkhound\include -B D:\a\elkhound\elkhound\build
+          dir
+          make -C D:\a\elkhound\elkhound\build
