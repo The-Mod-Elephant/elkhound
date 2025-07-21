@@ -7,8 +7,12 @@ concurrency:
 jobs:
   build:
     name: build
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
-    container: docker.io/ocaml/opam:debian-ocaml-4.08
+    container:
+      image: docker.io/ocaml/opam:debian-ocaml-4.08
+      options: --user root
     steps:
       - name: setup env
         run: |
@@ -24,3 +28,7 @@ jobs:
         env:
           ELKHOUND_BUILD_DIR: "build"
           ELKHOUND_SRC_DIR: "src"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-elkhound
+          path: /home/opam/elkhound/build/elkhound/elkhound

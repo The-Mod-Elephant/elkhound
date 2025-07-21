@@ -9,7 +9,9 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    container: docker.io/ocaml/opam:debian-ocaml-4.08
+    container:
+      image: docker.io/ocaml/opam:debian-ocaml-4.08
+      options: --user root
     steps:
       - name: setup env
         run: |
