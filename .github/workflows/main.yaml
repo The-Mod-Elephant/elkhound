@@ -38,13 +38,29 @@ jobs:
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4
-      - name: Set up Cygwin
-        uses: egor-tensin/setup-cygwin@v4
-        with:
-          packages: binutils make cmake mingw-gcc-core gcc gcc-g++ bison flex
+      - name: install deps
+        run: |
+          choco install --stoponfirstfailure -y -o mingw --version=12.2.0
+          choco install --stoponfirstfailure -y winflexbison3
       - name: build elkhound
         run: |
           mkdir build
+          export CXX=C:\ProgramData\chocolatey\lib\mingw\tools\install\g++.exe
+          export CC=C:\ProgramData\chocolatey\lib\mingw\tools\install\gcc.exe
           cmake -Wno-dev -S src -B build -DEXTRAS=OFF -DOCAML=OFF -DCMAKE_BUILD_TYPE=Release
           make -C build
-          ls D:\a\elkhound\elkhound\build\elkhound
+      # - name: build elkhound
+      #   run: |
+      #     mkdir build
+      #     export CXX=/usr/bin/x86_64-w64-mingw32-g++.exe
+      #     export CC=/usr/bin/x86_64-w64-mingw32-gcc.exe
+      #     cmake -Wno-dev -S src -B build -DEXTRAS=OFF -DOCAML=OFF -DCMAKE_BUILD_TYPE=Release
+      #     make -C build
+      #     mv build/elkhound/elkhound.exe .
+      #   shell: C:\tools\cygwin\bin\bash.exe --norc -o igncr '{0}'
+      #   env:
+      #     CMAKE_LEGACY_CYGWIN_WIN32: 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-elkhound
+          path: elkhound.exe

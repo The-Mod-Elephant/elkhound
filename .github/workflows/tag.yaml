@@ -43,10 +43,14 @@ jobs:
           packages: binutils make cmake mingw-gcc-core gcc gcc-g++ bison flex
       - name: build elkhound
         run: |
+          set -euo pipefail
           mkdir build
           cmake -Wno-dev -S src -B build -DEXTRAS=OFF -DOCAML=OFF -DCMAKE_BUILD_TYPE=Release
           make -C build
           mv D:\a\elkhound\elkhound\build\elkhound\elkhound.exe .
+        shell: C:\tools\cygwin\bin\bash.exe --login --norc -o igncr '{0}'
+        env:
+          CMAKE_LEGACY_CYGWIN_WIN32: 0
       - uses: actions/upload-artifact@v4
         with:
           name: win-elkhound
