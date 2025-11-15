@@ -22,15 +22,13 @@ add_library(ast STATIC
 # generate agrampar.tab.{cpp,h}
 add_custom_command(
     OUTPUT agrampar.tab.cpp agrampar.tab.h
-    COMMAND ${BISON_EXECUTABLE} -d ${CMAKE_CURRENT_SOURCE_DIR}/agrampar.y
-    COMMAND ${CMAKE_COMMAND} -E copy agrampar.tab.c agrampar.tab.cpp
-    COMMAND ${CMAKE_COMMAND} -E remove agrampar.tab.c
+    COMMAND bison -d ${CMAKE_CURRENT_SOURCE_DIR}/agrampar.y && mv agrampar.tab.c agrampar.tab.cpp
 )
 
 # generate agramlex.cc
 add_custom_command(
     OUTPUT agramlex.cc
-    COMMAND ${FLEX_EXECUTABLE} -oagramlex.cc ${CMAKE_CURRENT_SOURCE_DIR}/agramlex.lex
+    COMMAND flex -oagramlex.cc ${CMAKE_CURRENT_SOURCE_DIR}/agramlex.lex
 )
 
 # all the files for astgen
@@ -51,5 +49,3 @@ add_executable(astgen
 
 # link astgen against libast.a amd libsmbase.a
 target_link_libraries(astgen ast smbase)
-
-include_directories(${FLEX_INCLUDE_DIR})

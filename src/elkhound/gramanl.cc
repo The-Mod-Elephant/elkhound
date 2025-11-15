@@ -4934,6 +4934,8 @@ int inner_entry(int argc, char **argv)
     prefix = replace(argv[0], ".gr", "");
   }
 
+  SourceLocManager mgr;
+
   // parse the grammar
   string grammarFname = argv[0];
   SHIFT;

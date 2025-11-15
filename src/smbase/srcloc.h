@@ -237,16 +237,9 @@ private:     // funcs
   File *findFileWithLoc(SourceLoc loc);
   StaticLoc const *getStatic(SourceLoc loc);
 
-private:      // funcs
+public:      // funcs
   SourceLocManager();
   ~SourceLocManager();
-
-public:
-  static SourceLocManager* instance()
-  {
-    static SourceLocManager sourceLocManager;
-    return &sourceLocManager;
-  }
 
   // origins:
   //   character offsets start at 0
@@ -301,6 +294,9 @@ public:
 };
 
 
+// singleton pointer, set automatically by the constructor
+extern SourceLocManager *sourceLocManager;
+
 // dsw: So that gdb can find it please DO NOT inline this; also the
 // unique public name is intentional: I don't want gdb doing
 // overloading and sometimes getting it wrong, which it does
@@ -313,13 +309,13 @@ inline stringBuilder& operator<< (stringBuilder &sb, SourceLoc sl)
   { return sb << toString(sl); }
 
 inline string toLCString(SourceLoc sl)
-  { return SourceLocManager::instance()->getLCString(sl); }
+  { return sourceLocManager->getLCString(sl); }
 
 
 // macro for obtaining a source location that points at the
 // point in the source code where this macro is invoked
 #define HERE_SOURCELOC \
-  (SourceLocManager::instance()->encodeStatic(__FILE__, 0, __LINE__, 1))
+  (sourceLocManager->encodeStatic(__FILE__, 0, __LINE__, 1))
 
 
 // it's silly to demand mention of 'SourceLocManager' just to update

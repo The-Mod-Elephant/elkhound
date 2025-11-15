@@ -42,6 +42,8 @@ void doit(int argc, char **argv)
 
   if_malloc_stats();
 
+  SourceLocManager mgr;
+
   // string table for storing parse tree identifiers
   StringTable strTable;
 

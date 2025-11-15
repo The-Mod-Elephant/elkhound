@@ -25,8 +25,7 @@
 // for maintaining column count
 #define TOKEN_START  tokenStartLoc = fileState.loc /* user ; */
 #define UPD_COL      \
-  fileState.loc = SourceLocManager::instance()->advCol(fileState.loc, yyleng) \
-  /* user ; */
+  fileState.loc = sourceLocManager->advCol(fileState.loc, yyleng)  /* user ; */
 #define TOK_UPD_COL  TOKEN_START; UPD_COL  /* user ; */
 
 %}

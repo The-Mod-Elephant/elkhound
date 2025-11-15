@@ -3,45 +3,19 @@
 #
 # Minimum CMAKE version
 cmake_minimum_required(VERSION 3.0)
-project(elkhound)
 
-mark_as_advanced(
-    CLEAR
-    BISON_EXECUTABLE
-)
+# Global C flags
+set(CMAKE_C_FLAGS "-g3 -Wall -D__UNIX__ -fno-strict-aliasing")
+# Global C++ flags
+set(CMAKE_CXX_FLAGS "-g3 -Wall -fno-strict-aliasing")
 
-find_package(BISON REQUIRED)
+# Use debugging optimisation for Debug builds
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Og")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og")
 
-mark_as_advanced(
-    CLEAR
-    FLEX_EXECUTABLE
-    FLEX_INCLUDE_DIR
-)
-
-find_package(FLEX REQUIRED)
-
-if(NOT MSVC)
-    # Global C flags
-    set(CMAKE_C_FLAGS "-g3 -Wall -D__UNIX__ -fno-strict-aliasing")
-    # Global C++ flags
-    set(CMAKE_CXX_FLAGS "-g3 -Wall -fno-strict-aliasing")
-
-    # Use debugging optimisation for Debug builds
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Og")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og")
-
-    # Disable debug for Release builds
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -DNDEBUG")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG")
-else()
-    # set(CMAKE_C_FLAGS "/W4")
-    set(CMAKE_C_FLAGS "/WX-")
-    # set(CMAKE_CXX_FLAGS "/W4 /EHsc /D_CRT_SECURE_NO_WARNINGS=1 /DYY_NO_UNISTD_H=1")
-    set(CMAKE_CXX_FLAGS "/WX- /EHsc")
-
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} /DNDEBUG")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} /DNDEBUG")
-endif()
+# Strip & disable debug for Release builds
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s -DNDEBUG")
 
 # Global include directories
 INCLUDE_DIRECTORIES(ast smbase elkhound elkhound/c)
@@ -49,10 +23,8 @@ INCLUDE_DIRECTORIES(ast smbase elkhound elkhound/c)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # Option(s)
-if (NOT MSVC)
-    option(EXTRAS "Compile extra stuff(examples, cparse, etc)" ON)
-    option(OCAML "Run OCaml tests" ON)
-endif()
+option(EXTRAS "Compile extra stuff(examples, cparse, etc)" ON)
+option(OCAML "Run OCaml tests" ON)
 
 # set variables
 set(AST_DIR         ${CMAKE_CURRENT_BINARY_DIR}/ast)

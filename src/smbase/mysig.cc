@@ -5,9 +5,7 @@
 
 #include <string.h>     // strsignal
 #include <stdlib.h>     // exit
-#ifndef _MSC_VER
-  #include <unistd.h>     // sleep
-#endif
+#include <unistd.h>     // sleep
 #include <stdio.h>      // printf
 
 // needed on Solaris; is __sun__ a good way to detect that?
@@ -15,7 +13,7 @@
   #include <siginfo.h>
 #endif
 
-#if !defined(__CYGWIN__) && !defined(_MSC_VER)      // everything here is for *not* cygwin, MSVC++
+#ifndef __CYGWIN__      // everything here is for *not* cygwin
 
 void setHandler(int signum, SignalHandler handler)
 {
@@ -184,7 +182,7 @@ int main(int argc, char **argv)
     //printf("I'm pid %d waiting to be killed...\n", getpid());
     //sleep(10);
     printf("about to deliberately cause a segfault ...\n");
-    *((volatile int*)0) = 0;    // segfault!
+    *((int*)0) = 0;    // segfault!
 
     printf("didn't segfault??\n");
     return 2;
@@ -200,7 +198,7 @@ int main(int argc, char **argv)
 #endif // TEST_MYSIG
 
 
-#else   // cygwin, MSVC++ -- just stubs so it compiles
+#else   // cygwin -- just stubs so it compiles
 void setHandler(int, SignalHandler) {}
 void printHandler(int) {}
 jmp_buf sane_state;

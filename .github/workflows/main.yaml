@@ -35,52 +35,29 @@ jobs:
   windows-build:
     name: windows build
     runs-on: windows-latest
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4
-      - name: Set up cache
-        uses: actions/cache@v4
+      - name: Set up Cygwin
+        uses: egor-tensin/setup-cygwin@v4
         with:
-          path: ~/.buildcache
-          key: ${{ runner.os }}-win-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-win-
-      - name: install MSVC 2017
-        shell: pwsh
+          packages: binutils mingw64-x86_64-gcc-core mingw64-x86_64-gcc-g++ make cmake bison flex
+      - name: build elkhound
+        shell: bash
         run: |
-          $vs_url = "https://aka.ms/vs/15/release/vs_BuildTools.exe"
-          Invoke-WebRequest -Uri $vs_url -OutFile "vs_buildtools.exe"
-          if (-not (Test-Path "vs_buildtools.exe")) {
-              Write-Error "Failed to download VS Build Tools"
-              exit 1
-          }
-          $components = @(
-            "Microsoft.VisualStudio.Workload.VCTools",
-            "Microsoft.VisualStudio.Component.Windows10SDK.19041",
-            "Microsoft.VisualStudio.Component.VC.v141.x86.x64",
-            "Microsoft.VisualStudio.Component.VC.CMake.Project"
-          )
-          $componentArgs = ($components | ForEach-Object { "--add $_" }) -join " "
-          $installCmd = ".\vs_buildtools.exe --quiet --norestart --force --wait --installPath C:\BuildTools $componentArgs"
-          Start-Process -FilePath ".\vs_buildtools.exe" -ArgumentList $installCmd.Split() -Wait -PassThru
-      - name: install deps
-        run: |
-          choco install --stoponfirstfailure -y winflexbison3
-      - name: Check components
-        shell: cmd
-        run: |
-          call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
-          cmake -version
-          msbuild -version
           mkdir build
-          cmake -Wno-dev -B build -G Ninja -S src -DFLEX_INCLUDE_DIR=C:\ProgramData\chocolatey\lib\winflexbison3\tools -DCMAKE_BUILD_TYPE=Release
-          cd build
-          ninja
+          cmake -Wno-dev -G "Unix Makefiles" -S ../src/ -B build -DEXTRAS=OFF -DOCAML=OFF -DCMAKE_BUILD_TYPE=Release
+          ls build
+          make -C build
+          mv D:\a\elkhound\elkhound\build\elkhound\elkhound.exe .
         env:
           CMAKE_LEGACY_CYGWIN_WIN32: 0
+          CXX: /usr/bin/x86_64-w64-mingw32-g++.exe
+          CC: /usr/bin/x86_64-w64-mingw32-gcc.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win-elkhound
+          path: elkhound.exe
       - uses: actions/upload-artifact@v4
         with:
           name: windows-elkhound
