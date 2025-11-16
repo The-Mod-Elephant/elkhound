@@ -4,33 +4,28 @@ on:
     tags:
       - "*"
 jobs:
-  build:
-    name: build
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    container:
-      image: docker.io/ocaml/opam:debian-ocaml-4.08
-      options: --user root
+  build-nix:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            target: '.#packages.aarch64-darwin'
+            suffix: ''
+          - os: ubuntu-latest
+            target: '.#packages.x86_64-linux'
+            suffix: ''
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: setup env
-        run: |
-          sudo apt-get install -yqqq bison wget flex git cmake
-      - name: build elkhound
-        run: |
-          git clone https://github.com/${{ github.repository }} -b ${{ github.head_ref || github.ref_name }} /home/opam/elkhound
-          cd /home/opam/elkhound
-          mkdir -p ${ELKHOUND_BUILD_DIR}
-          export PATH=/home/opam/.opam/4.08/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-          cmake -Wno-dev -S ${ELKHOUND_SRC_DIR} -B ${ELKHOUND_BUILD_DIR} -D CMAKE_BUILD_TYPE=Release
-          make -C ${ELKHOUND_BUILD_DIR}
-        env:
-          ELKHOUND_BUILD_DIR: "build"
-          ELKHOUND_SRC_DIR: "src"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: lin-elkhound
-          path: /home/opam/elkhound/build/elkhound/elkhound
+    - uses: actions/checkout@main
+    - uses: cachix/install-nix-action@master
+      with:
+        nix_path: nixpkgs=channel:nixos-25.05
+    - run: |
+        nix build ${{ matrix.target }}
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.os }}
+        path: result/bin/elkhound
   windows-build:
     name: windows build
     runs-on: windows-latest
@@ -42,34 +37,41 @@ jobs:
         with:
           packages: binutils make cmake mingw-gcc-core gcc gcc-g++ bison flex
       - name: build elkhound
+        cmd: bash
         run: |
           mkdir build
           cmake -Wno-dev -S src -B build -DEXTRAS=OFF -DOCAML=OFF -DCMAKE_BUILD_TYPE=Release
           make -C build
-          mv D:\a\elkhound\elkhound\build\elkhound\elkhound.exe .
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@main
         with:
           name: win-elkhound
-          path: elkhound.exe
+          path: D:\a\elkhound\elkhound\build\elkhound\elkhound.exe
   release:
     name: release
     permissions:
       contents: write
-    needs: [build, windows-build]
+    needs: [build-nix, windows-build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@main
+      - uses: actions/download-artifact@main
         with:
-          name: lin-elkhound
+          name: macos-latest
+          path: mac-elkhound
+      - run: mv mac-elkhound/elkhound mac-elkhound
+        nix build ${{ matrix.target }}
+      - uses: actions/download-artifact@main
+        with:
+          name: ubuntu-latest
           path: lin-elkhound
-      - uses: actions/download-artifact@v4
+      - run: mv lin-elkhound/elkhound lin-elkhound
+      - uses: actions/download-artifact@main
         with:
           name: win-elkhound
           path: win-elkhound
       - name: Create Release
         id: create_release
-        uses: ncipollo/release-action@v1.18.0
+        uses: ncipollo/release-action@main
         with:
           generateReleaseNotes: true
-          artifacts: "lin-elkhound/elkhound,win-elkhound/elkhound.exe"
+          artifacts: "lin-elkhound,mac-elkhound,win-elkhound/elkhound.exe"
