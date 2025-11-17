@@ -28,24 +28,49 @@ jobs:
           path: result/bin/elkhound
   windows-build:
     name: windows build
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4
-      - name: Set up Cygwin
-        uses: egor-tensin/setup-cygwin@v4
+        uses: actions/checkout@main
+      - name: Set up cache
+        uses: actions/cache@v4
         with:
-          packages: binutils make cmake mingw-gcc-core gcc gcc-g++ bison flex
-      - name: build elkhound
-        shell: bash
+          path: ~/.buildcache
+          key: win-${{ github.sha }}
+          restore-keys: |
+           win
+      - name: install MSVC 2017
+        shell: pwsh
         run: |
+          $vs_url = "https://aka.ms/vs/15/release/vs_BuildTools.exe"
+          Invoke-WebRequest -Uri $vs_url -OutFile "vs_buildtools.exe"
+          if (-not (Test-Path "vs_buildtools.exe")) {
+              Write-Error "Failed to download VS Build Tools"
+              exit 1
+          }
+          $components = @(
+            "Microsoft.VisualStudio.Workload.VCTools",
+            "Microsoft.VisualStudio.Component.Windows10SDK.19041",
+            "Microsoft.VisualStudio.Component.VC.v143.x86.x64",
+            "Microsoft.VisualStudio.Component.VC.CMake.Project"
+          )
+          $componentArgs = ($components | ForEach-Object { "--add $_" }) -join " "
+          $installCmd = ".\vs_buildtools.exe --quiet --norestart --force --wait --installPath C:\BuildTools $componentArgs"
+          Start-Process -FilePath ".\vs_buildtools.exe" -ArgumentList $installCmd.Split() -Wait -PassThru
+      - name: Build elkhound
+        shell: cmd
+        run: |
+          call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+          cmake -version
+          msbuild -version
           mkdir build
-          cmake -Wno-dev -S src -B build -DEXTRAS=OFF -DOCAML=OFF -DCMAKE_BUILD_TYPE=Release
-          make -C build
-      - uses: actions/upload-artifact@main
+          cmake -Wno-dev -G Ninja -S src -B build -DEXTRAS=OFF -DOCAML=OFF -DCMAKE_BUILD_TYPE=Release
+          cd build
+          ninja
+      - uses: actions/upload-artifact@v4
         with:
-          name: win-elkhound
-          path: D:\a\elkhound\elkhound\build\elkhound\elkhound.exe
+          name: windows-elkhound
+          path: build/elkhound/elkhound.exe
   release:
     name: release
     permissions:
