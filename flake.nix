@@ -28,6 +28,7 @@
             nativeBuildInputs = with pkgs; [
               direnv
               git
+              yamllint
             ];
             # Env
             shellHook = ''

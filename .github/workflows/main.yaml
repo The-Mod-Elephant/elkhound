@@ -17,13 +17,13 @@ jobs:
             suffix: ''
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@main
-    - uses: cachix/install-nix-action@master
-      with:
-        nix_path: nixpkgs=channel:nixos-25.05
-    - run: |
-        nix build ${{ matrix.target }}
-    - uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.os }}
-        path: result/bin/elkhound
+      - uses: actions/checkout@main
+      - uses: cachix/install-nix-action@master
+        with:
+          nix_path: nixpkgs=channel:nixos-25.05
+      - run: |
+          nix build ${{ matrix.target }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}
+          path: result/bin/elkhound
