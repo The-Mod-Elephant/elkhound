@@ -27,7 +27,6 @@ jobs:
           name: ${{ matrix.os }}
           path: result/bin/elkhound
   windows-build:
-    name: windows build
     runs-on: windows-2022
     steps:
       - name: Checkout the code
@@ -69,7 +68,7 @@ jobs:
           ninja
       - uses: actions/upload-artifact@v4
         with:
-          name: windows-elkhound
+          name: win-elkhound
           path: build/elkhound/elkhound.exe
   release:
     name: release
@@ -82,21 +81,22 @@ jobs:
       - uses: actions/download-artifact@main
         with:
           name: macos-latest
-          path: mac-elkhound
+          path: macos-elkhound
       - uses: actions/download-artifact@main
         with:
           name: ubuntu-latest
-          path: lin-elkhound
+          path: linux-elkhound
       - uses: actions/download-artifact@main
         with:
           name: win-elkhound
           path: win-elkhound
       - run: |
-          mac-elkhound/elkhound mac-elkhound
-          mv lin-elkhound/elkhound lin-elkhound
+          mv macos-elkhound/elkhound mac-elkhound
+          mv linux-elkhound/elkhound lin-elkhound
+          mv win-elkhound/elkhound.exe elkhound.exe
       - name: Create Release
         id: create_release
         uses: ncipollo/release-action@main
         with:
           generateReleaseNotes: true
-          artifacts: "lin-elkhound,mac-elkhound,win-elkhound/elkhound.exe"
+          artifacts: "lin-elkhound,mac-elkhound,elkhound.exe"
