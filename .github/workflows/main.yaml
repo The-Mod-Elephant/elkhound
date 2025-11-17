@@ -27,3 +27,48 @@ jobs:
         with:
           name: ${{ matrix.os }}
           path: result/bin/elkhound
+  windows-build:
+    name: windows build
+    runs-on: windows-2022
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@main
+      - name: Set up cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.buildcache
+          key: win-${{ github.sha }}
+          restore-keys: |
+           win
+      - name: install MSVC 2017
+        shell: pwsh
+        run: |
+          $vs_url = "https://aka.ms/vs/15/release/vs_BuildTools.exe"
+          Invoke-WebRequest -Uri $vs_url -OutFile "vs_buildtools.exe"
+          if (-not (Test-Path "vs_buildtools.exe")) {
+              Write-Error "Failed to download VS Build Tools"
+              exit 1
+          }
+          $components = @(
+            "Microsoft.VisualStudio.Workload.VCTools",
+            "Microsoft.VisualStudio.Component.Windows10SDK.19041",
+            "Microsoft.VisualStudio.Component.VC.v143.x86.x64",
+            "Microsoft.VisualStudio.Component.VC.CMake.Project"
+          )
+          $componentArgs = ($components | ForEach-Object { "--add $_" }) -join " "
+          $installCmd = ".\vs_buildtools.exe --quiet --norestart --force --wait --installPath C:\BuildTools $componentArgs"
+          Start-Process -FilePath ".\vs_buildtools.exe" -ArgumentList $installCmd.Split() -Wait -PassThru
+      - name: Build elkhound
+        shell: cmd
+        run: |
+          call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+          cmake -version
+          msbuild -version
+          mkdir build
+          cmake -Wno-dev -G Ninja -S src -B build -DEXTRAS=OFF -DOCAML=OFF -DCMAKE_BUILD_TYPE=Release
+          cd build
+          ninja
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-elkhound
+          path: build/elkhound/elkhound.exe
