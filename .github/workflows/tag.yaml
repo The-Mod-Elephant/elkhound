@@ -16,16 +16,16 @@ jobs:
             suffix: ''
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@main
-    - uses: cachix/install-nix-action@master
-      with:
-        nix_path: nixpkgs=channel:nixos-25.05
-    - run: |
-        nix build ${{ matrix.target }}
-    - uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.os }}
-        path: result/bin/elkhound
+      - uses: actions/checkout@main
+      - uses: cachix/install-nix-action@master
+        with:
+          nix_path: nixpkgs=channel:nixos-25.05
+      - run: |
+          nix build ${{ matrix.target }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}
+          path: result/bin/elkhound
   windows-build:
     name: windows build
     runs-on: windows-latest
@@ -37,7 +37,7 @@ jobs:
         with:
           packages: binutils make cmake mingw-gcc-core gcc gcc-g++ bison flex
       - name: build elkhound
-        cmd: bash
+        shell: bash
         run: |
           mkdir build
           cmake -Wno-dev -S src -B build -DEXTRAS=OFF -DOCAML=OFF -DCMAKE_BUILD_TYPE=Release
@@ -58,17 +58,17 @@ jobs:
         with:
           name: macos-latest
           path: mac-elkhound
-      - run: mv mac-elkhound/elkhound mac-elkhound
-        nix build ${{ matrix.target }}
       - uses: actions/download-artifact@main
         with:
           name: ubuntu-latest
           path: lin-elkhound
-      - run: mv lin-elkhound/elkhound lin-elkhound
       - uses: actions/download-artifact@main
         with:
           name: win-elkhound
           path: win-elkhound
+      - run: |
+          mac-elkhound/elkhound mac-elkhound
+          mv lin-elkhound/elkhound lin-elkhound
       - name: Create Release
         id: create_release
         uses: ncipollo/release-action@main
