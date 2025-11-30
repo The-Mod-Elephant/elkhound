@@ -4,15 +4,31 @@ on:
     tags:
       - "*"
 jobs:
-  build-nix:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - name: build elkhound
+        run: |
+          sudo apt-get update -yqqq
+          sudo apt-get install -yqqq bison cmake flex wget libfl-dev
+          mkdir -p obj
+          cmake -Wno-dev -S src -B obj -DEXTRAS=OFF -DOCAML=OFF -DCMAKE_BUILD_TYPE=Release
+          make -j$(npoc) -C obj
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu-latest
+          path: obj/elkhound/elkhound
+          if-no-files-found: error
+  build-macos:
     strategy:
       matrix:
         include:
           - os: macos-latest
             target: '.#packages.aarch64-darwin'
             suffix: ''
-          - os: ubuntu-latest
-            target: '.#packages.x86_64-linux'
+          - os: macos-15-intel
+            target: '.#packages.x86_64-darwin'
             suffix: ''
     runs-on: ${{ matrix.os }}
     steps:
@@ -26,6 +42,7 @@ jobs:
         with:
           name: ${{ matrix.os }}
           path: result/bin/elkhound
+          if-no-files-found: error
   windows-build:
     runs-on: windows-2022
     steps:
@@ -70,6 +87,7 @@ jobs:
         with:
           name: win-elkhound
           path: build/elkhound/elkhound.exe
+          if-no-files-found: error
   release:
     name: release
     permissions:
@@ -80,8 +98,12 @@ jobs:
       - uses: actions/checkout@main
       - uses: actions/download-artifact@main
         with:
-          name: macos-latest
+          name: macos-15-intel
           path: macos-elkhound
+      - uses: actions/download-artifact@main
+        with:
+          name: macos-latest
+          path: macos-arm-elkhound
       - uses: actions/download-artifact@main
         with:
           name: ubuntu-latest
@@ -93,10 +115,11 @@ jobs:
       - run: |
           mv macos-elkhound/elkhound mac-elkhound
           mv linux-elkhound/elkhound lin-elkhound
+          mv macos-arm-elkhound/elkhound mac-arm-elkhound
           mv win-elkhound/elkhound.exe elkhound.exe
       - name: Create Release
         id: create_release
         uses: ncipollo/release-action@main
         with:
           generateReleaseNotes: true
-          artifacts: "lin-elkhound,mac-elkhound,elkhound.exe"
+          artifacts: "lin-elkhound,mac-elkhound,mac-arm-elkhound,elkhound.exe"
