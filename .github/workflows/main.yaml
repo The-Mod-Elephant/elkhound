@@ -21,7 +21,7 @@ jobs:
           name: ubuntu-latest
           path: obj/elkhound/elkhound
           if-no-files-found: error
-  build-macos:
+  build-nix:
     strategy:
       matrix:
         include:
@@ -90,6 +90,11 @@ jobs:
           path: build/elkhound/elkhound.exe
   build-oci-image:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: linux/arm64
+          - os: linux/amd64
     steps:
       - name: Checkout
         uses: actions/checkout@v4.2.2
@@ -102,9 +107,7 @@ jobs:
         with:
           context: .
           push: false
-          platforms: |
-            linux/arm64
-            linux/amd64
+          platforms: ${{ matrix.os }}
           build-args: |
             GITHUB_REF
             GITHUB_SHA

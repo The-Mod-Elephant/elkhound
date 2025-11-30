@@ -20,7 +20,7 @@ jobs:
           name: ubuntu-latest
           path: obj/elkhound/elkhound
           if-no-files-found: error
-  build-macos:
+  build-nix:
     strategy:
       matrix:
         include:
@@ -92,7 +92,7 @@ jobs:
     name: release
     permissions:
       contents: write
-    needs: [build-nix, windows-build]
+    needs: [build-nix, build-linux, windows-build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main
