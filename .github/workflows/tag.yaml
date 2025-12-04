@@ -20,30 +20,36 @@ jobs:
           name: ubuntu-latest
           path: obj/elkhound/elkhound
           if-no-files-found: error
-  build-nix:
+  build-macos:
     strategy:
       matrix:
         include:
           - os: macos-latest
-            target: '.#packages.aarch64-darwin'
-            suffix: ''
+            include: /opt/homebrew/opt
           - os: macos-15-intel
-            target: '.#packages.x86_64-darwin'
-            suffix: ''
+            include: /usr/local/opt
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@main
-      - uses: cachix/install-nix-action@master
-        with:
-          nix_path: nixpkgs=channel:nixos-25.05
-      - run: |
-          nix build ${{ matrix.target }}
+      - name: build elkhound
+        run: |
+          export HOMEBREW_NO_AUTO_UPDATE=1
+          brew install flex bison
+          export LDFLAGS="$LDFLAGS -L/${{ matrix.include }}/flex/lib -L/${{ matrix.include }}/bison/lib"
+          echo $LDFLAGS
+          export CPPFLAGS="$CPPFLAGS -I/${{ matrix.include }}/flex/include"
+          echo $CPPFLAGS
+          export PATH="${{ matrix.include }}/flex/bin:${{ matrix.include }}/bison/bin:$PATH"
+          echo $PATH
+          mkdir -p obj
+          cmake -Wno-dev -S src -B obj -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DFLEX_INCLUDE_DIR=${{ matrix.include }}/flex/include -DEXTRAS=OFF -DOCAML=OFF -DCMAKE_BUILD_TYPE=Release
+          make -C obj
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}
-          path: result/bin/elkhound
+          path: obj/elkhound/elkhound
           if-no-files-found: error
-  windows-build:
+  build-windows:
     runs-on: windows-2022
     steps:
       - name: Checkout the code
@@ -73,7 +79,7 @@ jobs:
           $componentArgs = ($components | ForEach-Object { "--add $_" }) -join " "
           $installCmd = ".\vs_buildtools.exe --quiet --norestart --force --wait --installPath C:\BuildTools $componentArgs"
           Start-Process -FilePath ".\vs_buildtools.exe" -ArgumentList $installCmd.Split() -Wait -PassThru
-      - name: Build elkhound
+      - name: build elkhound
         shell: cmd
         run: |
           call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
@@ -85,14 +91,13 @@ jobs:
           ninja
       - uses: actions/upload-artifact@v4
         with:
-          name: win-elkhound
+          name: windows-elkhound
           path: build/elkhound/elkhound.exe
-          if-no-files-found: error
   release:
     name: release
     permissions:
       contents: write
-    needs: [build-nix, build-linux, windows-build]
+    needs: [build-macos, build-linux, build-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main
