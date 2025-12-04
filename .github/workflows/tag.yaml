@@ -93,6 +93,7 @@ jobs:
         with:
           name: windows-elkhound
           path: build/elkhound/elkhound.exe
+          if-no-files-found: error
   release:
     name: release
     permissions:
@@ -115,13 +116,13 @@ jobs:
           path: linux-elkhound
       - uses: actions/download-artifact@main
         with:
-          name: win-elkhound
-          path: win-elkhound
+          name: windows-elkhound
+          path: windows-elkhound
       - run: |
           mv macos-elkhound/elkhound mac-elkhound
           mv linux-elkhound/elkhound lin-elkhound
           mv macos-arm-elkhound/elkhound mac-arm-elkhound
-          mv win-elkhound/elkhound.exe elkhound.exe
+          mv windows-elkhound/elkhound.exe elkhound.exe
       - name: Create Release
         id: create_release
         uses: ncipollo/release-action@main
