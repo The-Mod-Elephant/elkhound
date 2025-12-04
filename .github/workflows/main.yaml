@@ -51,7 +51,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@main
-      - run: |
+      - name: build elkhound
+        run: |
           export HOMEBREW_NO_AUTO_UPDATE=1
           brew install flex bison
           export LDFLAGS="$LDFLAGS -L/${{ matrix.include }}/flex/lib -L/${{ matrix.include }}/bison/lib"
@@ -98,7 +99,7 @@ jobs:
           $componentArgs = ($components | ForEach-Object { "--add $_" }) -join " "
           $installCmd = ".\vs_buildtools.exe --quiet --norestart --force --wait --installPath C:\BuildTools $componentArgs"
           Start-Process -FilePath ".\vs_buildtools.exe" -ArgumentList $installCmd.Split() -Wait -PassThru
-      - name: Build elkhound
+      - name: build elkhound
         shell: cmd
         run: |
           call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
