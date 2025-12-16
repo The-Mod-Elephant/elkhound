@@ -5,7 +5,7 @@ concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}
 jobs:
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@main
       - name: build elkhound
@@ -17,7 +17,7 @@ jobs:
           make -j$(npoc) -C obj
       - uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-latest
+          name: ubuntu-22.04
           path: obj/elkhound/elkhound
           if-no-files-found: error
   build-nix:
@@ -114,7 +114,7 @@ jobs:
           name: windows-elkhound
           path: build/elkhound/elkhound.exe
   build-oci-image:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         include:

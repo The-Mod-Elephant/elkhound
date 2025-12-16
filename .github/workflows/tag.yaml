@@ -5,7 +5,7 @@ on:
       - "*"
 jobs:
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@main
       - name: build elkhound
@@ -17,7 +17,7 @@ jobs:
           make -j$(npoc) -C obj
       - uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-latest
+          name: ubuntu-22.04
           path: obj/elkhound/elkhound
           if-no-files-found: error
   build-macos:
@@ -99,7 +99,7 @@ jobs:
     permissions:
       contents: write
     needs: [build-macos, build-linux, build-windows]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@main
       - uses: actions/download-artifact@main
@@ -112,7 +112,7 @@ jobs:
           path: macos-arm-elkhound
       - uses: actions/download-artifact@main
         with:
-          name: ubuntu-latest
+          name: ubuntu-22.04
           path: linux-elkhound
       - uses: actions/download-artifact@main
         with:
