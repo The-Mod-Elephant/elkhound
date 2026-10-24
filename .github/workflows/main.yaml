@@ -95,3 +95,14 @@ jobs:
           name: windows-elkhound
           path: build/elkhound/elkhound.exe
           if-no-files-found: error
+  trigger-release:
+    needs: [build-macos, build-linux, build-windows]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - name: trigger
+        run: |
+            gh workflow run release.yaml --ref ${{ github.ref_name }} -f run_id=${{ github.run_id }}
+        env:
+          GH_TOKEN: ${{ github.token }}
